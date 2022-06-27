@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bilibili/discovery/naming"
 	"github.com/BurntSushi/toml"
 	xtime "github.com/Terry-Mao/goim/pkg/time"
+	"github.com/bilibili/discovery/naming"
 )
 
 var (
@@ -33,9 +33,9 @@ func init() {
 		defAddrs      = os.Getenv("ADDRS")
 		defWeight, _  = strconv.ParseInt(os.Getenv("WEIGHT"), 10, 32)
 		defOffline, _ = strconv.ParseBool(os.Getenv("OFFLINE"))
-		defDebug, _   = strconv.ParseBool(os.Getenv("DEBUG"))
+		//defDebug, _   = strconv.ParseBool(os.Getenv("DEBUG"))
 	)
-	flag.StringVar(&confPath, "conf", "comet-example.toml", "default config path.")
+	flag.StringVar(&confPath, "conf", "cmd/comet/comet-example.toml", "default config path.")
 	flag.StringVar(&region, "region", os.Getenv("REGION"), "avaliable region. or use REGION env variable, value: sh etc.")
 	flag.StringVar(&zone, "zone", os.Getenv("ZONE"), "avaliable zone. or use ZONE env variable, value: sh001/sh002 etc.")
 	flag.StringVar(&deployEnv, "deploy.env", os.Getenv("DEPLOY_ENV"), "deploy env. or use DEPLOY_ENV env variable, value: dev/fat1/uat/pre/prod etc.")
@@ -43,7 +43,7 @@ func init() {
 	flag.StringVar(&addrs, "addrs", defAddrs, "server public ip addrs. or use ADDRS env variable, value: 127.0.0.1 etc.")
 	flag.Int64Var(&weight, "weight", defWeight, "load balancing weight, or use WEIGHT env variable, value: 10 etc.")
 	flag.BoolVar(&offline, "offline", defOffline, "server offline. or use OFFLINE env variable, value: true/false etc.")
-	flag.BoolVar(&debug, "debug", defDebug, "server debug. or use DEBUG env variable, value: true/false etc.")
+	flag.BoolVar(&debug, "debug", true, "server debug. or use DEBUG env variable, value: true/false etc.")
 }
 
 // Init init config.
