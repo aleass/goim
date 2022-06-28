@@ -48,8 +48,8 @@ func (s *server) PushMsg(ctx context.Context, req *pb.PushMsgReq) (reply *pb.Pus
 	if len(req.Keys) == 0 || req.Proto == nil {
 		return nil, errors.ErrPushMsgArg
 	}
-	for _, key := range req.Keys {
-		bucket := s.srv.Bucket(key)
+	for _, key := range req.Keys { //req.Keys 房间号
+		bucket := s.srv.Bucket(key) //获取房子
 		if bucket == nil {
 			continue
 		}

@@ -13,8 +13,8 @@ type Room struct {
 	rLock     sync.RWMutex
 	next      *Channel
 	drop      bool
-	Online    int32 // dirty read is ok
-	AllOnline int32
+	Online    int32 // dirty read is ok  当前房间id的在线数量
+	AllOnline int32 //记录这个房间id所有的人数（包含其他房子的）
 }
 
 // NewRoom new a room struct, store channel room info.

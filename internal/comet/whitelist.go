@@ -12,7 +12,7 @@ var whitelist *Whitelist
 // Whitelist .
 type Whitelist struct {
 	log  *log.Logger
-	list map[int64]struct{} // whitelist for debug
+	list map[int64]struct{} // whitelist for debug   //白名单
 }
 
 // InitWhitelist a whitelist struct.

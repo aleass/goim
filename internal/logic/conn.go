@@ -20,7 +20,7 @@ func (l *Logic) Connect(c context.Context, server, cookie string, token []byte) 
 		Platform string  `json:"platform"`
 		Accepts  []int32 `json:"accepts"`
 	}
-	if err = json.Unmarshal(token, &params); err != nil {
+	if err = json.Unmarshal(token, &params); err != nil { //{"mid":1, "key":"test_server_key", "room_id":"test://test_room", "platform":"web", "accepts":[1000,1001,1002]}
 		log.Errorf("json.Unmarshal(%s) error(%v)", token, err)
 		return
 	}

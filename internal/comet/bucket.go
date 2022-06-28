@@ -15,25 +15,25 @@ type Bucket struct {
 	cLock sync.RWMutex        // protect the channels for chs
 	chs   map[string]*Channel // map sub key to a channel
 	// room
-	rooms       map[string]*Room // bucket room channels
-	routines    []chan *pb.BroadcastRoomReq
+	rooms       map[string]*Room            // bucket room channels  【房间id】房间信息
+	routines    []chan *pb.BroadcastRoomReq //全部房间
 	routinesNum uint64
 
 	ipCnts map[string]int32
 }
 
 // NewBucket new a bucket struct. store the key with im channel.
-func NewBucket(c *conf.Bucket) (b *Bucket) {
+func NewBucket(c *conf.Bucket) (b *Bucket) { //房间生成
 	b = new(Bucket)
 	b.chs = make(map[string]*Channel, c.Channel)
 	b.ipCnts = make(map[string]int32)
 	b.c = c
 	b.rooms = make(map[string]*Room, c.Room)
-	b.routines = make([]chan *pb.BroadcastRoomReq, c.RoutineAmount)
+	b.routines = make([]chan *pb.BroadcastRoomReq, c.RoutineAmount) //生成房子
 	for i := uint64(0); i < c.RoutineAmount; i++ {
-		c := make(chan *pb.BroadcastRoomReq, c.RoutineSize)
+		c := make(chan *pb.BroadcastRoomReq, c.RoutineSize) //生成N个房间
 		b.routines[i] = c
-		go b.roomproc(c)
+		go b.roomproc(c) //一个房子一个go
 	}
 	return
 }
@@ -66,6 +66,7 @@ func (b *Bucket) RoomsCount() (res map[string]int32) {
 }
 
 // ChangeRoom change ro room
+//nrid 房间id
 func (b *Bucket) ChangeRoom(nrid string, ch *Channel) (err error) {
 	var (
 		nroom *Room
@@ -81,7 +82,7 @@ func (b *Bucket) ChangeRoom(nrid string, ch *Channel) (err error) {
 		return
 	}
 	b.cLock.Lock()
-	if nroom, ok = b.rooms[nrid]; !ok {
+	if nroom, ok = b.rooms[nrid]; !ok { //不存在创建房间
 		nroom = NewRoom(nrid)
 		b.rooms[nrid] = nroom
 	}

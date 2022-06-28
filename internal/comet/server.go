@@ -55,7 +55,7 @@ func newLogicClient(c *conf.RPCClient) logic.LogicClient {
 type Server struct {
 	c         *conf.Config
 	round     *Round    // accept round store
-	buckets   []*Bucket // subkey bucket
+	buckets   []*Bucket // subkey bucket    房子数量（同样的房间id分布在不同的房子）
 	bucketIdx uint32
 
 	serverID  string
@@ -66,14 +66,14 @@ type Server struct {
 func NewServer(c *conf.Config) *Server {
 	s := &Server{
 		c:         c,
-		round:     NewRound(c),
+		round:     NewRound(c), //tp 读写缓存
 		rpcClient: newLogicClient(c.RPCClient),
 	}
 	// init bucket
-	s.buckets = make([]*Bucket, c.Bucket.Size)
+	s.buckets = make([]*Bucket, c.Bucket.Size) //房子生成
 	s.bucketIdx = uint32(c.Bucket.Size)
 	for i := 0; i < c.Bucket.Size; i++ {
-		s.buckets[i] = NewBucket(c.Bucket)
+		s.buckets[i] = NewBucket(c.Bucket) //每个房子的房间生成
 	}
 	s.serverID = c.Env.Host
 	go s.onlineproc()
@@ -87,7 +87,7 @@ func (s *Server) Buckets() []*Bucket {
 
 // Bucket get the bucket by subkey.
 func (s *Server) Bucket(subKey string) *Bucket {
-	idx := cityhash.CityHash32([]byte(subKey), uint32(len(subKey))) % s.bucketIdx
+	idx := cityhash.CityHash32([]byte(subKey), uint32(len(subKey))) % s.bucketIdx //安装城市取房子
 	if conf.Conf.Debug {
 		log.Infof("%s hit channel bucket index: %d use cityhash", subKey, idx)
 	}
@@ -111,8 +111,8 @@ func (s *Server) onlineproc() {
 			err           error
 		)
 		roomCount := make(map[string]int32)
-		for _, bucket := range s.buckets {
-			for roomID, count := range bucket.RoomsCount() {
+		for _, bucket := range s.buckets { //循环房子
+			for roomID, count := range bucket.RoomsCount() { //获取房子下的有在线的房间
 				roomCount[roomID] += count
 			}
 		}

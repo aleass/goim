@@ -20,7 +20,7 @@ const (
 )
 
 // InitTCP listen all tcp.bind and start accept connections.
-func InitTCP(server *Server, addrs []string, accept int) (err error) {
+func InitTCP(server *Server, addrs []string, accept int) (err error) { //addrs []127.0.0.1:7890
 	var (
 		bind     string
 		listener *net.TCPListener
@@ -37,7 +37,7 @@ func InitTCP(server *Server, addrs []string, accept int) (err error) {
 		}
 		log.Infof("start tcp listen: %s", bind)
 		// split N core accept
-		for i := 0; i < accept; i++ {
+		for i := 0; i < accept; i++ { //设置对应数量的go监听端口
 			go acceptTCP(server, listener)
 		}
 	}
@@ -108,7 +108,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		lastHb  = time.Now()
 		rb      = rp.Get()
 		wb      = wp.Get()
-		ch      = NewChannel(s.c.Protocol.CliProto, s.c.Protocol.SvrProto)
+		ch      = NewChannel(s.c.Protocol.CliProto, s.c.Protocol.SvrProto) // 5,  10
 		rr      = &ch.Reader
 		wr      = &ch.Writer
 	)
@@ -152,10 +152,10 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	}
 	step = 3
 	// hanshake ok start dispatch goroutine
-	go s.dispatchTCP(conn, wr, wp, wb, ch)
+	go s.dispatchTCP(conn, wr, wp, wb, ch) //chan - > bufio 写数据
 	serverHeartbeat := s.RandServerHearbeat()
-	for {
-		if p, err = ch.CliProto.Set(); err != nil {
+	for { //读
+		if p, err = ch.CliProto.Set(); err != nil { //获取一个proto
 			break
 		}
 		if white {
@@ -234,7 +234,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 		if white {
 			whitelist.Printf("key: %s wait proto ready\n", ch.Key)
 		}
-		var p = ch.Ready()
+		var p = ch.Ready() //从chan读取数据
 		if white {
 			whitelist.Printf("key: %s proto ready\n", ch.Key)
 		}

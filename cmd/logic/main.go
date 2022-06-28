@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/bilibili/discovery/naming"
-	resolver "github.com/bilibili/discovery/naming/grpc"
 	"github.com/Terry-Mao/goim/internal/logic"
 	"github.com/Terry-Mao/goim/internal/logic/conf"
 	"github.com/Terry-Mao/goim/internal/logic/grpc"
 	"github.com/Terry-Mao/goim/internal/logic/http"
 	"github.com/Terry-Mao/goim/internal/logic/model"
 	"github.com/Terry-Mao/goim/pkg/ip"
+	"github.com/bilibili/discovery/naming"
+	resolver "github.com/bilibili/discovery/naming/grpc"
 	log "github.com/golang/glog"
 )
 
@@ -35,9 +35,11 @@ func main() {
 	dis := naming.New(conf.Conf.Discovery)
 	resolver.Register(dis)
 	// logic
+
 	srv := logic.New(conf.Conf)
 	httpSrv := http.New(conf.Conf.HTTPServer, srv)
 	rpcSrv := grpc.New(conf.Conf.RPCServer, srv)
+
 	cancel := register(dis, srv)
 	// signal
 	c := make(chan os.Signal, 1)
