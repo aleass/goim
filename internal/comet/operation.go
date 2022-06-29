@@ -2,6 +2,7 @@ package comet
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Terry-Mao/goim/api/logic"
@@ -93,9 +94,10 @@ func (s *Server) Operate(ctx context.Context, p *protocol.Proto, ch *Channel, b 
 		p.Op = protocol.OpUnsubReply
 	default:
 		// TODO ack ok&failed   发送消息到 logic.Receive
-		if err := s.Receive(ctx, ch.Mid, p); err != nil {
-			log.Errorf("s.Report(%d) op:%d error(%v)", ch.Mid, p.Op, err)
-		}
+		//if err := s.Receive(ctx, ch.Mid, p); err != nil {
+		//	log.Errorf("s.Report(%d) op:%d error(%v)", ch.Mid, p.Op, err)
+		//}
+		fmt.Println(string(p.Body))
 		p.Body = nil
 	}
 	return nil

@@ -2,6 +2,7 @@ package comet
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"strings"
@@ -100,17 +101,17 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		err     error
 		rid     string
 		accepts []int32
-		hb      time.Duration
-		white   bool
-		p       *protocol.Proto
-		b       *Bucket
-		trd     *xtime.TimerData
-		lastHb  = time.Now()
-		rb      = rp.Get()
-		wb      = wp.Get()
-		ch      = NewChannel(s.c.Protocol.CliProto, s.c.Protocol.SvrProto) // 5,  10
-		rr      = &ch.Reader
-		wr      = &ch.Writer
+		//hb      time.Duration
+		white bool
+		p     *protocol.Proto
+		b     *Bucket
+		//trd     *xtime.TimerData
+		lastHb = time.Now()
+		rb     = rp.Get()
+		wb     = wp.Get()
+		ch     = NewChannel(s.c.Protocol.CliProto, s.c.Protocol.SvrProto) // 5,  10
+		rr     = &ch.Reader
+		wr     = &ch.Writer
 	)
 	ch.Reader.ResetBuffer(conn, rb.Bytes())
 	ch.Writer.ResetBuffer(conn, wb.Bytes())
@@ -118,15 +119,16 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	defer cancel()
 	// handshake
 	step := 0
-	trd = tr.Add(time.Duration(s.c.Protocol.HandshakeTimeout), func() {
-		conn.Close()
-		log.Errorf("key: %s remoteIP: %s step: %d tcp handshake timeout", ch.Key, conn.RemoteAddr().String(), step)
-	})
+	fmt.Println(s.c.Protocol.HandshakeTimeout)
+	//trd = tr.Add(time.Duration(s.c.Protocol.HandshakeTimeout), func() {
+	//	conn.Close()
+	//	log.Errorf("key: %s remoteIP: %s step: %d tcp handshake timeout", ch.Key, conn.RemoteAddr().String(), step)
+	//})
 	ch.IP, _, _ = net.SplitHostPort(conn.RemoteAddr().String())
 	// must not setadv, only used in auth
 	step = 1
 	if p, err = ch.CliProto.Set(); err == nil {
-		if ch.Mid, ch.Key, rid, accepts, hb, err = s.authTCP(ctx, rr, wr, p); err == nil {
+		if ch.Mid, ch.Key, rid, accepts, _, err = s.authTCP(ctx, rr, wr, p); err == nil {
 			ch.Watch(accepts...)
 			b = s.Bucket(ch.Key)
 			err = b.Put(rid, ch)
@@ -140,19 +142,19 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		conn.Close()
 		rp.Put(rb)
 		wp.Put(wb)
-		tr.Del(trd)
+		//tr.Del(trd)
 		log.Errorf("key: %s handshake failed error(%v)", ch.Key, err)
 		return
 	}
-	trd.Key = ch.Key
-	tr.Set(trd, hb)
+	//trd.Key = ch.Key
+	//tr.Set(trd, hb)
 	white = whitelist.Contains(ch.Mid)
 	if white {
 		whitelist.Printf("key: %s[%s] auth\n", ch.Key, rid)
 	}
 	step = 3
 	// hanshake ok start dispatch goroutine
-	//go s.dispatchTCP(conn, wr, wp, wb, ch) //chan - > bufio 写数据
+	go s.dispatchTCP(conn, wr, wp, wb, ch) //chan - > bufio 写数据
 	serverHeartbeat := s.RandServerHearbeat()
 	for { //读
 		if p, err = ch.CliProto.Set(); err != nil { //获取一个proto
@@ -168,7 +170,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 			whitelist.Printf("key: %s read proto:%v\n", ch.Key, p)
 		}
 		if p.Op == protocol.OpHeartbeat {
-			tr.Set(trd, hb)
+			//tr.Set(trd, hb)
 			p.Op = protocol.OpHeartbeatReply
 			p.Body = nil
 			// NOTE: send server heartbeat for a long time
@@ -202,7 +204,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		log.Errorf("key: %s server tcp failed error(%v)", ch.Key, err)
 	}
 	b.Del(ch)
-	tr.Del(trd)
+	//tr.Del(trd)
 	rp.Put(rb)
 	conn.Close()
 	ch.Close()
@@ -230,6 +232,11 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 	if conf.Conf.Debug {
 		log.Infof("key: %s start dispatch tcp goroutine", ch.Key)
 	}
+	go func() {
+		wr.Write([]byte("aaaaaaaaa"))
+		wr.Flush()
+		time.Sleep(time.Second)
+	}()
 	for {
 		if white {
 			whitelist.Printf("key: %s wait proto ready\n", ch.Key)
@@ -340,10 +347,10 @@ func (s *Server) authTCP(ctx context.Context, rr *bufio.Reader, wr *bufio.Writer
 	//}
 	//p.Op = protocol.OpAuthReply
 	//p.Body = nil
-	//if err = p.WriteTCP(wr); err != nil {
-	//	log.Errorf("authTCP.WriteTCP(key:%v).err(%v)", key, err)
-	//	return
-	//}
-	//err = wr.Flush()
+	if err = p.WriteTCP(wr); err != nil {
+		log.Errorf("authTCP.WriteTCP(key:%v).err(%v)", key, err)
+		return
+	}
+	err = wr.Flush()
 	return
 }
