@@ -38,7 +38,7 @@
 
 [whitelist]
     Whitelist = [123]
-    WhiteLog  = "/tmp/white_list.log"
+    WhiteLog  = "tmp/white_list.log"
 
 [bucket]
     size = 32

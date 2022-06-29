@@ -47,7 +47,7 @@ func (d *Dao) AddMapping(c context.Context, mid int64, key, server string) (err 
 	conn := d.redis.Get()
 	defer conn.Close()
 	var n = 2
-	if mid > 0 {
+	if mid > 0 { //hset (mid_%d,mid) key server(c.Env.Host)
 		if err = conn.Send("HSET", keyMidServer(mid), key, server); err != nil {
 			log.Errorf("conn.Send(HSET %d,%s,%s) error(%v)", mid, server, key, err)
 			return
@@ -57,7 +57,7 @@ func (d *Dao) AddMapping(c context.Context, mid int64, key, server string) (err 
 			return
 		}
 		n += 2
-	}
+	} //set key_%s server(c.Env.Host)
 	if err = conn.Send("SET", keyKeyServer(key), server); err != nil {
 		log.Errorf("conn.Send(HSET %d,%s,%s) error(%v)", mid, server, key, err)
 		return

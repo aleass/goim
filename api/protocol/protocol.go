@@ -105,7 +105,7 @@ func (p *Proto) WriteTCP(wr *bufio.Writer) (err error) {
 		return
 	}
 	packLen = _rawHeaderSize + int32(len(p.Body))
-	if buf, err = wr.Peek(_rawHeaderSize); err != nil {
+	if buf, err = wr.Peek(_rawHeaderSize); err != nil { //从缓存获取块
 		return
 	}
 	binary.BigEndian.PutInt32(buf[_packOffset:], packLen)
@@ -113,7 +113,7 @@ func (p *Proto) WriteTCP(wr *bufio.Writer) (err error) {
 	binary.BigEndian.PutInt16(buf[_verOffset:], int16(p.Ver))
 	binary.BigEndian.PutInt32(buf[_opOffset:], p.Op)
 	binary.BigEndian.PutInt32(buf[_seqOffset:], p.Seq)
-	if p.Body != nil {
+	if p.Body != nil { //body为空则跳过
 		_, err = wr.Write(p.Body)
 	}
 	return

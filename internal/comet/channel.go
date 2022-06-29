@@ -9,6 +9,7 @@ import (
 )
 
 // Channel used by message pusher send msg to write goroutine.
+// tcp 的读写结构
 type Channel struct {
 	Room     *Room
 	CliProto Ring
@@ -75,7 +76,8 @@ func (c *Channel) Push(p *protocol.Proto) (err error) {
 
 // Ready check the channel ready or close?
 func (c *Channel) Ready() *protocol.Proto {
-	return <-c.signal
+	var p = <-c.signal
+	return p
 }
 
 // Signal send signal to the channel, protocol ready.

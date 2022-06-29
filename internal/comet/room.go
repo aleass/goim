@@ -8,10 +8,11 @@ import (
 )
 
 // Room is a room and store channel room info.
+//直播间的信息  next存储tcp
 type Room struct {
 	ID        string
 	rLock     sync.RWMutex
-	next      *Channel
+	next      *Channel //tco
 	drop      bool
 	Online    int32 // dirty read is ok  当前房间id的在线数量
 	AllOnline int32 //记录这个房间id所有的人数（包含其他房子的）

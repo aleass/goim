@@ -15,7 +15,7 @@ func (j *Job) push(ctx context.Context, pushMsg *pb.PushMsg) (err error) {
 	switch pushMsg.Type {
 	case pb.PushMsg_PUSH:
 		err = j.pushKeys(pushMsg.Operation, pushMsg.Server, pushMsg.Keys, pushMsg.Msg)
-	case pb.PushMsg_ROOM:
+	case pb.PushMsg_ROOM: //%s://%s
 		err = j.getRoom(pushMsg.Room).Push(pushMsg.Operation, pushMsg.Msg)
 	case pb.PushMsg_BROADCAST:
 		err = j.broadcast(pushMsg.Operation, pushMsg.Msg, pushMsg.Speed)

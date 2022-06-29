@@ -58,7 +58,7 @@ type Server struct {
 	buckets   []*Bucket // subkey bucket    房子数量（同样的房间id分布在不同的房子）
 	bucketIdx uint32
 
-	serverID  string
+	serverID  string //c.Env.Host
 	rpcClient logic.LogicClient
 }
 
@@ -70,10 +70,10 @@ func NewServer(c *conf.Config) *Server {
 		rpcClient: newLogicClient(c.RPCClient),
 	}
 	// init bucket
-	s.buckets = make([]*Bucket, c.Bucket.Size) //房子生成
+	s.buckets = make([]*Bucket, c.Bucket.Size) //生成房子图纸
 	s.bucketIdx = uint32(c.Bucket.Size)
 	for i := 0; i < c.Bucket.Size; i++ {
-		s.buckets[i] = NewBucket(c.Bucket) //每个房子的房间生成
+		s.buckets[i] = NewBucket(c.Bucket) //生成房子
 	}
 	s.serverID = c.Env.Host
 	go s.onlineproc()
@@ -104,6 +104,7 @@ func (s *Server) Close() (err error) {
 	return
 }
 
+//todo
 func (s *Server) onlineproc() {
 	for {
 		var (

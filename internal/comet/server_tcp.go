@@ -152,7 +152,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	}
 	step = 3
 	// hanshake ok start dispatch goroutine
-	go s.dispatchTCP(conn, wr, wp, wb, ch) //chan - > bufio 写数据
+	//go s.dispatchTCP(conn, wr, wp, wb, ch) //chan - > bufio 写数据
 	serverHeartbeat := s.RandServerHearbeat()
 	for { //读
 		if p, err = ch.CliProto.Set(); err != nil { //获取一个proto
@@ -283,7 +283,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 				whitelist.Printf("key: %s start write server proto%v\n", ch.Key, p)
 			}
 			// server send
-			if err = p.WriteTCP(wr); err != nil {
+			if err = p.WriteTCP(wr); err != nil { // 写入到bufio.buf,满了会丢到io
 				goto failed
 			}
 			if white {
@@ -297,7 +297,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 			whitelist.Printf("key: %s start flush \n", ch.Key)
 		}
 		// only hungry flush response
-		if err = wr.Flush(); err != nil {
+		if err = wr.Flush(); err != nil { //刷到tcp，b.n = 0
 			break
 		}
 		if white {
@@ -334,16 +334,16 @@ func (s *Server) authTCP(ctx context.Context, rr *bufio.Reader, wr *bufio.Writer
 			log.Errorf("tcp request operation(%d) not auth", p.Op)
 		}
 	}
-	if mid, key, rid, accepts, hb, err = s.Connect(ctx, p, ""); err != nil {
-		log.Errorf("authTCP.Connect(key:%v).err(%v)", key, err)
-		return
-	}
-	p.Op = protocol.OpAuthReply
-	p.Body = nil
-	if err = p.WriteTCP(wr); err != nil {
-		log.Errorf("authTCP.WriteTCP(key:%v).err(%v)", key, err)
-		return
-	}
-	err = wr.Flush()
+	//if mid, key, rid, accepts, hb, err = s.Connect(ctx, p, ""); err != nil {
+	//	log.Errorf("authTCP.Connect(key:%v).err(%v)", key, err)
+	//	return
+	//}
+	//p.Op = protocol.OpAuthReply
+	//p.Body = nil
+	//if err = p.WriteTCP(wr); err != nil {
+	//	log.Errorf("authTCP.WriteTCP(key:%v).err(%v)", key, err)
+	//	return
+	//}
+	//err = wr.Flush()
 	return
 }

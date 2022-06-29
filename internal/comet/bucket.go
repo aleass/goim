@@ -10,30 +10,31 @@ import (
 )
 
 // Bucket is a channel holder.
+//地区房子
 type Bucket struct {
 	c     *conf.Bucket
 	cLock sync.RWMutex        // protect the channels for chs
 	chs   map[string]*Channel // map sub key to a channel
 	// room
 	rooms       map[string]*Room            // bucket room channels  【房间id】房间信息
-	routines    []chan *pb.BroadcastRoomReq //全部房间
+	routines    []chan *pb.BroadcastRoomReq //
 	routinesNum uint64
 
 	ipCnts map[string]int32
 }
 
 // NewBucket new a bucket struct. store the key with im channel.
-func NewBucket(c *conf.Bucket) (b *Bucket) { //房间生成
+func NewBucket(c *conf.Bucket) (b *Bucket) { //生成房子
 	b = new(Bucket)
 	b.chs = make(map[string]*Channel, c.Channel)
 	b.ipCnts = make(map[string]int32)
 	b.c = c
 	b.rooms = make(map[string]*Room, c.Room)
-	b.routines = make([]chan *pb.BroadcastRoomReq, c.RoutineAmount) //生成房子
+	b.routines = make([]chan *pb.BroadcastRoomReq, c.RoutineAmount) //广播间数量
 	for i := uint64(0); i < c.RoutineAmount; i++ {
-		c := make(chan *pb.BroadcastRoomReq, c.RoutineSize) //生成N个房间
+		c := make(chan *pb.BroadcastRoomReq, c.RoutineSize) //广播间的容量
 		b.routines[i] = c
-		go b.roomproc(c) //一个房子一个go
+		go b.roomproc(c) //广播间
 	}
 	return
 }

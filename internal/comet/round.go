@@ -41,7 +41,7 @@ func NewRound(c *conf.Config) (r *Round) {
 			TimerSize:    c.Protocol.TimerSize,
 		}}
 	// reader
-	r.readers = make([]bytes.Pool, r.options.Reader)
+	r.readers = make([]bytes.Pool, r.options.Reader) //r.options.Reader 32
 	for i = 0; i < r.options.Reader; i++ {
 		r.readers[i].Init(r.options.ReadBuf, r.options.ReadBufSize)
 	}

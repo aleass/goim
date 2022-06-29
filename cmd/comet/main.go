@@ -41,6 +41,8 @@ func main() {
 	//dis := naming.New(conf.Conf.Discovery)
 	//resolver.Register(dis)
 	// new comet server
+
+	//*******************************************
 	srv := comet.NewServer(conf.Conf)
 	if err := comet.InitWhitelist(conf.Conf.Whitelist); err != nil {
 		panic(err)
@@ -56,6 +58,8 @@ func main() {
 			panic(err)
 		}
 	}
+	//*******************************************
+
 	// new grpc server
 	rpcSrv := grpc.New(conf.Conf.RPCServer, srv)
 
@@ -118,7 +122,7 @@ func register(dis *naming.Discovery, srv *comet.Server) context.CancelFunc {
 				for ip := range bucket.IPCount() {
 					ips[ip] = struct{}{}
 				}
-				conns += bucket.ChannelCount()
+				conns += bucket.ChannelCount() // map[string]*Channel
 			}
 			ins.Metadata[md.MetaConnCount] = fmt.Sprint(conns)
 			ins.Metadata[md.MetaIPCount] = fmt.Sprint(len(ips))

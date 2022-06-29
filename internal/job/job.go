@@ -17,11 +17,11 @@ import (
 
 // Job is push job.
 type Job struct {
-	c            *conf.Config
-	consumer     *cluster.Consumer
-	cometServers map[string]*Comet
+	c            *conf.Config      //配置
+	consumer     *cluster.Consumer //kafka
+	cometServers map[string]*Comet //[Hostname]Comet
 
-	rooms      map[string]*Room
+	rooms      map[string]*Room // room//
 	roomsMutex sync.RWMutex
 }
 

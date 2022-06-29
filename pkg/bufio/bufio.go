@@ -34,7 +34,7 @@ var (
 type Reader struct {
 	buf  []byte
 	rd   io.Reader // reader provided by the client
-	r, w int       // buf read and write positions
+	r, w int       // buf read and write positions  r是当前读到的位置，w是当前从io取到数据的位置
 	err  error
 }
 
@@ -87,8 +87,8 @@ var errNegativeRead = errors.New("bufio: reader returned negative count from Rea
 // fill reads a new chunk into the buffer.
 func (b *Reader) fill() {
 	// Slide existing data to beginning.
-	if b.r > 0 {
-		copy(b.buf, b.buf[b.r:b.w])
+	if b.r > 0 { // 把之前的已经读完的数据清掉
+		copy(b.buf, b.buf[b.r:b.w]) //copy没有读的数据到0位
 		b.w -= b.r
 		b.r = 0
 	}
@@ -99,7 +99,7 @@ func (b *Reader) fill() {
 
 	// Read new data: try a limited number of times.
 	for i := maxConsecutiveEmptyReads; i > 0; i-- {
-		n, err := b.rd.Read(b.buf[b.w:])
+		n, err := b.rd.Read(b.buf[b.w:]) //从b.w位开始从io加载数据
 		if n < 0 {
 			panic(errNegativeRead)
 		}
@@ -112,6 +112,7 @@ func (b *Reader) fill() {
 			return
 		}
 	}
+	//到此说明没有读到数据
 	b.err = io.ErrNoProgress
 }
 
@@ -132,16 +133,16 @@ func (b *Reader) Peek(n int) ([]byte, error) {
 	if n > len(b.buf) {
 		return nil, ErrBufferFull
 	}
-	// 0 <= n <= len(b.buf)
-	for b.w-b.r < n && b.err == nil {
+	// 0 <= n <= len(b.buf)   w-r < n 说明需要读取足够的数据才能满足n返回
+	for b.w-b.r < n && b.err == nil { //通过w和r差值判断是否有数据并且大于需要取出的
 		b.fill() // b.w-b.r < len(b.buf) => buffer is not full
 	}
 
 	var err error
-	if avail := b.w - b.r; avail < n {
+	if avail := b.w - b.r; avail < n { //avail：没读取的数据，剩余的数据不满足n
 		// not enough data in buffer
-		n = avail
-		err = b.readErr()
+		n = avail         //修改n的长度
+		err = b.readErr() //读取错误
 		if err == nil {
 			err = ErrBufferFull
 		}
@@ -156,7 +157,7 @@ func (b *Reader) Peek(n int) ([]byte, error) {
 func (b *Reader) Pop(n int) ([]byte, error) {
 	d, err := b.Peek(n)
 	if err == nil {
-		b.r += n
+		b.r += n //只有无错误时才更正读位置
 		return d, err
 	}
 	return nil, err
@@ -351,7 +352,7 @@ func (b *Reader) Buffered() int { return b.w - b.r }
 type Writer struct {
 	err error
 	buf []byte
-	n   int
+	n   int //当前写的位置
 	wr  io.Writer
 }
 
@@ -408,7 +409,7 @@ func (b *Writer) flush() error {
 	if b.n == 0 {
 		return nil
 	}
-	n, err := b.wr.Write(b.buf[0:b.n])
+	n, err := b.wr.Write(b.buf[0:b.n]) //刷到io
 	if n < b.n && err == nil {
 		err = io.ErrShortWrite
 	}
@@ -435,24 +436,24 @@ func (b *Writer) Buffered() int { return b.n }
 // If nn < len(p), it also returns an error explaining
 // why the write is short.
 func (b *Writer) Write(p []byte) (nn int, err error) {
-	for len(p) > b.Available() && b.err == nil {
+	for len(p) > b.Available() && b.err == nil { //如果p大于可用的
 		var n int
-		if b.Buffered() == 0 {
+		if b.Buffered() == 0 { //可用的为0
 			// Large write, empty buffer.
 			// Write directly from p to avoid copy.
-			n, b.err = b.wr.Write(p)
+			n, b.err = b.wr.Write(p) //写到io
 		} else {
-			n = copy(b.buf[b.n:], p)
+			n = copy(b.buf[b.n:], p) //拷贝一部分
 			b.n += n
-			b.flush()
+			b.flush() //写到io，b.n = 0
 		}
 		nn += n
-		p = p[n:]
+		p = p[n:] //更新p到剩余或者0的部分
 	}
 	if b.err != nil {
 		return nn, b.err
 	}
-	n := copy(b.buf[b.n:], p)
+	n := copy(b.buf[b.n:], p) //剩余的p copy到b.buf
 	b.n += n
 	nn += n
 	return nn, nil
@@ -487,14 +488,14 @@ func (b *Writer) Peek(n int) ([]byte, error) {
 	if n > len(b.buf) {
 		return nil, ErrBufferFull
 	}
-	for b.Available() < n && b.err == nil {
-		b.flush()
+	for b.Available() < n && b.err == nil { //Available = 剩余可用的
+		b.flush() //刷入
 	}
 	if b.err != nil {
 		return nil, b.err
 	}
-	d := b.buf[b.n : b.n+n]
-	b.n += n
+	d := b.buf[b.n : b.n+n] //获取需要的块
+	b.n += n                //更新位置
 	return d, nil
 }
 

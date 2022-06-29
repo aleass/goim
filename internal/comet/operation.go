@@ -13,6 +13,15 @@ import (
 	"google.golang.org/grpc/encoding/gzip"
 )
 
+/*
+p.Body
+	Mid      int64   `json:"mid"`  手机id：
+	Key      string  `json:"key"`  秘钥：
+	RoomID   string  `json:"room_id"` 房间url：test://test_room
+	Platform string  `json:"platform"` 平台：
+	Accepts  []int32 `json:"accepts"` 房间号：[1000,1001,1002]
+*/
+
 // Connect connected a connection.
 func (s *Server) Connect(c context.Context, p *protocol.Proto, cookie string) (mid int64, key, rid string, accepts []int32, heartbeat time.Duration, err error) {
 	reply, err := s.rpcClient.Connect(c, &logic.ConnectReq{
